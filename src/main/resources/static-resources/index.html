@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BDR Outreach Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f6fa;
+      color: #1a1a2e;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header span { font-size: 12px; opacity: 0.6; }
+
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 2px solid #e8eaf0;
+      padding: 0 24px;
+    }
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      color: #4361ee;
+      border-bottom-color: #4361ee;
+    }
+
+    .tab-panel { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
+    .tab-panel.active { display: block; }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #1a1a2e; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    label { display: block; font-size: 12px; font-weight: 500; color: #555; margin-bottom: 4px; }
+    input, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #dde1ec;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus { border-color: #4361ee; }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: #4361ee; color: #fff; }
+    .btn-success { background: #2ec4b6; color: #fff; }
+    .btn-warning { background: #f77f00; color: #fff; }
+    .btn-secondary { background: #e8eaf0; color: #333; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn:not(:disabled):hover { opacity: 0.85; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-NEW    { background: #e8eaf0; color: #555; }
+    .badge-MESSAGE_READY { background: #d1fae5; color: #065f46; }
+    .badge-RESPONDED    { background: #dbeafe; color: #1e40af; }
+    .badge-ERROR  { background: #fee2e2; color: #991b1b; }
+
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #888;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    .signals-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .signal-chip {
+      background: #eff3ff;
+      color: #3730a3;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .message-block {
+      border: 1px solid #e8eaf0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    .message-type {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .message-body { white-space: pre-wrap; font-size: 13px; line-height: 1.6; color: #333; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #ccc;
+      border-top-color: #4361ee;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-bar {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    /* Bulk tab */
+    .drop-zone {
+      border: 2px dashed #c5cae9;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      color: #888;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 12px;
+    }
+    .drop-zone:hover, .drop-zone.over { background: #f0f4ff; border-color: #4361ee; }
+    .drop-zone p { font-size: 14px; margin-top: 6px; }
+    .drop-zone small { font-size: 12px; color: #aaa; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f5f6fa; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #666; border-bottom: 1px solid #e8eaf0; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f0f0f5; vertical-align: middle; }
+    tr:hover td { background: #fafbff; }
+    .table-wrap { overflow-x: auto; }
+
+    .detail-panel {
+      background: #f8f9ff;
+      border-left: 3px solid #4361ee;
+      padding: 16px;
+      border-radius: 0 6px 6px 0;
+      margin-top: 8px;
+    }
+
+    .hubspot-badge {
+      font-size: 11px;
+      background: #fff7ed;
+      color: #92400e;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .sfdc-payload {
+      background: #1e293b;
+      color: #94a3b8;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre;
+      overflow-x: auto;
+      margin-top: 6px;
+    }
+
+    .empty-state { text-align: center; color: #aaa; padding: 40px; }
+    .error-msg { color: #dc2626; font-size: 12px; margin-top: 6px; }
+
+    /* Bulk generate-all bar */
+    .bulk-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>BDR Outreach Tool</h1>
+  <span>AI-powered LinkedIn outreach</span>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('single')">Single Account</button>
+  <button class="tab-btn" onclick="showTab('bulk')">Bulk Upload</button>
+</div>
+
+<!-- ── Single Account Tab ── -->
+<div id="tab-single" class="tab-panel active">
+
+  <div class="card">
+    <h2>Create Account</h2>
+    <div class="form-row">
+      <div>
+        <label>Company Name *</label>
+        <input id="s-company" placeholder="Acme Corp" />
+      </div>
+      <div>
+        <label>Industry *</label>
+        <input id="s-industry" placeholder="Software" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Website *</label>
+        <input id="s-website" placeholder="https://acme.com" />
+      </div>
+      <div>
+        <label>Target Persona *</label>
+        <input id="s-persona" placeholder="VP Engineering" />
+      </div>
+    </div>
+    <div class="form-row full">
+      <div>
+        <label>Notes (optional)</label>
+        <input id="s-notes" placeholder="Met at KubeCon" />
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="createAccount()">Create Account</button>
+    </div>
+    <div class="error-msg" id="s-error"></div>
+  </div>
+
+  <div class="card" id="s-account-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 id="s-acc-name"></h2>
+        <span id="s-acc-industry" style="color:#888;font-size:12px"></span>
+      </div>
+      <span id="s-acc-badge" class="badge"></span>
+    </div>
+
+    <div class="section-label" style="margin-top:12px">Actions</div>
+    <div class="actions">
+      <button id="btn-generate" class="btn btn-primary" onclick="generateMessages()">Generate Messages</button>
+      <button id="btn-respond" class="btn btn-success" onclick="markResponded()" disabled>Mark Responded</button>
+      <button id="btn-sfdc" class="btn btn-secondary" onclick="getSfdc()" disabled>SFDC Export</button>
+    </div>
+    <div class="status-bar" id="s-status"></div>
+
+    <div id="s-signals-section" style="display:none">
+      <div class="section-label">Company Signals</div>
+      <div class="signals-list" id="s-signals"></div>
+    </div>
+
+    <div id="s-messages-section" style="display:none">
+      <div class="section-label">Generated Messages</div>
+      <div id="s-messages"></div>
+    </div>
+
+    <div id="s-hubspot-section" style="display:none">
+      <div class="section-label">HubSpot Sync</div>
+      <span class="hubspot-badge" id="s-hubspot-id"></span>
+    </div>
+
+    <div id="s-sfdc-section" style="display:none">
+      <div class="section-label">Salesforce Export</div>
+      <button class="btn btn-sm btn-secondary" onclick="copySfdc()">Copy JSON</button>
+      <pre class="sfdc-payload" id="s-sfdc-json"></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Bulk Upload Tab ── -->
+<div id="tab-bulk" class="tab-panel">
+
+  <div class="card">
+    <h2>Bulk Upload</h2>
+    <div class="drop-zone" id="drop-zone"
+         onclick="document.getElementById('csv-file').click()"
+         ondragover="event.preventDefault();this.classList.add('over')"
+         ondragleave="this.classList.remove('over')"
+         ondrop="handleDrop(event)">
+      <div style="font-size:28px">📂</div>
+      <p>Drop CSV file here or click to browse</p>
+      <small>Headers: companyName, industry, website, targetPersona, notes</small>
+    </div>
+    <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="handleFile(event)">
+    <div class="error-msg" id="b-error"></div>
+    <div id="b-upload-result" style="display:none;margin-top:8px;font-size:13px;color:#555"></div>
+  </div>
+
+  <div id="b-accounts-section" style="display:none">
+    <div class="bulk-header">
+      <h3 style="font-size:15px;font-weight:600">Accounts</h3>
+      <button class="btn btn-primary" onclick="generateAll()">Generate All</button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap">
+        <table id="bulk-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Industry</th>
+              <th>Persona</th>
+              <th>Status</th>
+              <th>HubSpot</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bulk-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+
+  let currentAccountId = null;
+  let currentAccountStatus = null;
+  let sseSource = null;
+  let allAccounts = [];   // latest snapshot from SSE/polling
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+
+  function showTab(name) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['single','bulk'][i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'bulk') startBulkPolling();
+    else stopBulkPolling();
+  }
+
+  // ── SSE / polling for bulk tab ─────────────────────────────────────────────
+
+  let bulkPollInterval = null;
+
+  function startBulkPolling() {
+    stopBulkPolling();
+    fetchAccounts();
+    bulkPollInterval = setInterval(fetchAccounts, 2000);
+  }
+
+  function stopBulkPolling() {
+    if (bulkPollInterval) { clearInterval(bulkPollInterval); bulkPollInterval = null; }
+  }
+
+  async function fetchAccounts() {
+    try {
+      const res = await fetch('/accounts');
+      if (!res.ok) return;
+      const data = await res.json();
+      allAccounts = data.entries || [];
+      renderBulkTable();
+      if (currentAccountId) refreshSingleAccount();
+    } catch (_) {}
+  }
+
+  // Also poll for single account updates
+  let singlePollInterval = null;
+
+  function startSinglePolling() {
+    stopSinglePolling();
+    singlePollInterval = setInterval(refreshSingleAccount, 2000);
+  }
+
+  function stopSinglePolling() {
+    if (singlePollInterval) { clearInterval(singlePollInterval); singlePollInterval = null; }
+  }
+
+  async function refreshSingleAccount() {
+    if (!currentAccountId) return;
+    try {
+      const res = await fetch('/accounts');
+      if (!res.ok) return;
+      const data = await res.json();
+      allAccounts = data.entries || [];
+      const entry = allAccounts.find(e => e.accountId === currentAccountId);
+      if (entry) renderSingleAccount(entry);
+    } catch (_) {}
+  }
+
+  // ── Single account ─────────────────────────────────────────────────────────
+
+  async function createAccount() {
+    const company  = document.getElementById('s-company').value.trim();
+    const industry = document.getElementById('s-industry').value.trim();
+    const website  = document.getElementById('s-website').value.trim();
+    const persona  = document.getElementById('s-persona').value.trim();
+    const notes    = document.getElementById('s-notes').value.trim();
+
+    document.getElementById('s-error').textContent = '';
+
+    if (!company || !industry || !website || !persona) {
+      document.getElementById('s-error').textContent = 'Company name, industry, website, and target persona are required.';
+      return;
+    }
+
+    setStatus('Creating account…');
+
+    try {
+      const res = await fetch('/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName: company, industry, website, targetPersona: persona, notes })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus('');
+        document.getElementById('s-error').textContent = data.detail || 'Error creating account.';
+        return;
+      }
+      currentAccountId = data.accountId;
+      currentAccountStatus = 'NEW';
+      setStatus('Account created.');
+      showAccountCard({ accountId: data.accountId, companyName: company, industry, status: 'NEW', signals: [], messages: [], hubspotId: '' });
+      startSinglePolling();
+    } catch (e) {
+      setStatus('');
+      document.getElementById('s-error').textContent = 'Network error.';
+    }
+  }
+
+  async function generateMessages() {
+    if (!currentAccountId) return;
+    document.getElementById('btn-generate').disabled = true;
+    setStatus('<span class="spinner"></span> Generating messages… (this may take 15–30 seconds)');
+
+    try {
+      await fetch('/accounts/' + currentAccountId + '/generate', { method: 'POST' });
+      // The workflow runs asynchronously; we poll until MESSAGE_READY or ERROR
+    } catch (e) {
+      setStatus('Network error starting generation.');
+      document.getElementById('btn-generate').disabled = false;
+    }
+  }
+
+  async function markResponded() {
+    if (!currentAccountId) return;
+    document.getElementById('btn-respond').disabled = true;
+    setStatus('Marking as responded…');
+
+    try {
+      const res = await fetch('/accounts/' + currentAccountId + '/respond', { method: 'POST' });
+      if (res.ok) {
+        setStatus('Marked as responded. HubSpot sync in progress…');
+      } else {
+        setStatus('Error marking as responded.');
+        document.getElementById('btn-respond').disabled = false;
+      }
+    } catch (e) {
+      setStatus('Network error.');
+      document.getElementById('btn-respond').disabled = false;
+    }
+  }
+
+  async function getSfdc() {
+    if (!currentAccountId) return;
+    setStatus('Fetching Salesforce payload…');
+    try {
+      const res = await fetch('/accounts/' + currentAccountId + '/sfdc');
+      if (!res.ok) { setStatus('Error fetching SFDC payload.'); return; }
+      const data = await res.json();
+      document.getElementById('s-sfdc-section').style.display = '';
+      document.getElementById('s-sfdc-json').textContent = JSON.stringify(data, null, 2);
+      setStatus('');
+    } catch (e) {
+      setStatus('Network error.');
+    }
+  }
+
+  function copySfdc() {
+    const text = document.getElementById('s-sfdc-json').textContent;
+    navigator.clipboard.writeText(text).then(() => setStatus('Copied to clipboard.'));
+  }
+
+  function showAccountCard(entry) {
+    document.getElementById('s-account-card').style.display = '';
+    renderSingleAccount(entry);
+  }
+
+  function renderSingleAccount(entry) {
+    if (!entry) return;
+    currentAccountStatus = entry.status;
+
+    document.getElementById('s-acc-name').textContent = entry.companyName;
+    document.getElementById('s-acc-industry').textContent = entry.industry;
+
+    const badge = document.getElementById('s-acc-badge');
+    badge.textContent = entry.status;
+    badge.className = 'badge badge-' + entry.status;
+
+    // Buttons
+    const isGenerating = entry.status === 'NEW' && document.getElementById('btn-generate').disabled;
+    document.getElementById('btn-generate').disabled = entry.status !== 'NEW' && entry.status !== 'ERROR';
+    document.getElementById('btn-respond').disabled = entry.status !== 'MESSAGE_READY';
+    document.getElementById('btn-sfdc').disabled = entry.status !== 'RESPONDED' && entry.status !== 'MESSAGE_READY';
+
+    // Signals
+    if (entry.signals && entry.signals.length > 0) {
+      document.getElementById('s-signals-section').style.display = '';
+      document.getElementById('s-signals').innerHTML =
+        entry.signals.map(s => `<span class="signal-chip">${escHtml(s)}</span>`).join('');
+    }
+
+    // Messages
+    if (entry.messages && entry.messages.length > 0) {
+      document.getElementById('s-messages-section').style.display = '';
+      document.getElementById('s-messages').innerHTML = entry.messages.map(m =>
+        `<div class="message-block">
+          <div class="message-type">${formatMsgType(m.messageType)}</div>
+          <div class="message-body">${escHtml(m.body)}</div>
+        </div>`
+      ).join('');
+    }
+
+    // HubSpot
+    if (entry.hubspotId && entry.hubspotId.length > 0) {
+      document.getElementById('s-hubspot-section').style.display = '';
+      document.getElementById('s-hubspot-id').textContent = entry.hubspotId;
+      stopSinglePolling();
+      setStatus('');
+    }
+
+    // Once MESSAGE_READY, stop showing spinner
+    if (entry.status === 'MESSAGE_READY') {
+      stopSinglePolling();
+      setStatus('Messages ready.');
+    } else if (entry.status === 'ERROR') {
+      stopSinglePolling();
+      setStatus('Generation failed. You can retry.');
+    }
+  }
+
+  // ── Bulk tab ───────────────────────────────────────────────────────────────
+
+  function handleFile(event) {
+    const file = event.target.files[0];
+    if (file) uploadCsv(file);
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    document.getElementById('drop-zone').classList.remove('over');
+    const file = event.dataTransfer.files[0];
+    if (file) uploadCsv(file);
+  }
+
+  async function uploadCsv(file) {
+    document.getElementById('b-error').textContent = '';
+    const text = await file.text();
+
+    try {
+      const res = await fetch('/accounts/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: text
+      });
+      const data = await res.json();
+
+      if (!res.ok || (data.rejected && data.rejected.length === data.total && data.total > 0)) {
+        document.getElementById('b-error').textContent =
+          data.rejected ? data.rejected.map(r => r.reason).join('; ') : 'Upload failed.';
+        return;
+      }
+
+      let msg = `Uploaded ${data.total} rows: ${data.created} created`;
+      if (data.rejected && data.rejected.length > 0) {
+        msg += `, ${data.rejected.length} rejected (${data.rejected.map(r => r.companyName + ': ' + r.reason).join('; ')})`;
+      }
+      document.getElementById('b-upload-result').style.display = '';
+      document.getElementById('b-upload-result').textContent = msg;
+      document.getElementById('b-accounts-section').style.display = '';
+      startBulkPolling();
+    } catch (e) {
+      document.getElementById('b-error').textContent = 'Network error uploading CSV.';
+    }
+  }
+
+  async function generateAll() {
+    try {
+      const res = await fetch('/accounts/generate-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.accountCount === 0) {
+        alert('No eligible accounts (all must be NEW or ERROR status).');
+      }
+    } catch (e) {
+      alert('Error starting bulk generation.');
+    }
+  }
+
+  // expandedRows tracks which accountIds have detail panels open
+  const expandedRows = new Set();
+
+  function renderBulkTable() {
+    const tbody = document.getElementById('bulk-tbody');
+    if (!allAccounts.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No accounts yet.</td></tr>';
+      document.getElementById('b-accounts-section').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('b-accounts-section').style.display = '';
+    tbody.innerHTML = allAccounts.map(e => {
+      const expanded = expandedRows.has(e.accountId);
+      const hubspot = e.hubspotId && e.hubspotId.length > 0 ? `<span class="hubspot-badge">${escHtml(e.hubspotId)}</span>` : '—';
+      const msgSummary = e.messages && e.messages.length > 0
+        ? escHtml(e.messages[0].body.substring(0, 60)) + '…'
+        : '<span style="color:#aaa">—</span>';
+
+      const genDisabled  = (e.status !== 'NEW' && e.status !== 'ERROR') ? 'disabled' : '';
+      const respDisabled = e.status !== 'MESSAGE_READY' ? 'disabled' : '';
+      const sfdcDisabled = (e.status !== 'RESPONDED' && e.status !== 'MESSAGE_READY') ? 'disabled' : '';
+
+      let detail = '';
+      if (expanded) {
+        const signals = e.signals && e.signals.length > 0
+          ? e.signals.map(s => `<span class="signal-chip">${escHtml(s)}</span>`).join('')
+          : '<span style="color:#aaa;font-size:12px">None yet</span>';
+        const messages = e.messages && e.messages.length > 0
+          ? e.messages.map(m =>
+              `<div class="message-block">
+                <div class="message-type">${formatMsgType(m.messageType)}</div>
+                <div class="message-body">${escHtml(m.body)}</div>
+              </div>`).join('')
+          : '<span style="color:#aaa;font-size:12px">No messages yet</span>';
+        detail = `
+          <tr>
+            <td colspan="6" style="padding:0">
+              <div class="detail-panel">
+                <div class="section-label">Signals</div>
+                <div class="signals-list" style="margin-bottom:12px">${signals}</div>
+                <div class="section-label">Messages</div>
+                ${messages}
+              </div>
+            </td>
+          </tr>`;
+      }
+
+      return `
+        <tr>
+          <td>
+            <a href="#" style="color:#4361ee;font-weight:500;text-decoration:none"
+               onclick="toggleRow('${e.accountId}');return false">
+              ${escHtml(e.companyName)}
+            </a>
+          </td>
+          <td>${escHtml(e.industry)}</td>
+          <td>${escHtml(e.targetPersona)}</td>
+          <td><span class="badge badge-${e.status}">${e.status}</span></td>
+          <td>${hubspot}</td>
+          <td>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-primary" ${genDisabled}
+                onclick="bulkGenerate('${e.accountId}')">Generate</button>
+              <button class="btn btn-sm btn-success" ${respDisabled}
+                onclick="bulkRespond('${e.accountId}')">Responded</button>
+              <button class="btn btn-sm btn-secondary" ${sfdcDisabled}
+                onclick="bulkSfdc('${e.accountId}')">SFDC</button>
+            </div>
+          </td>
+        </tr>
+        ${detail}`;
+    }).join('');
+  }
+
+  function toggleRow(accountId) {
+    if (expandedRows.has(accountId)) expandedRows.delete(accountId);
+    else expandedRows.add(accountId);
+    renderBulkTable();
+  }
+
+  async function bulkGenerate(accountId) {
+    await fetch('/accounts/' + accountId + '/generate', { method: 'POST' });
+  }
+
+  async function bulkRespond(accountId) {
+    await fetch('/accounts/' + accountId + '/respond', { method: 'POST' });
+  }
+
+  async function bulkSfdc(accountId) {
+    const res = await fetch('/accounts/' + accountId + '/sfdc');
+    if (!res.ok) return;
+    const data = await res.json();
+    const payload = JSON.stringify(data, null, 2);
+    // Show in a simple dialog
+    const w = window.open('', '_blank', 'width=600,height=500');
+    w.document.write(`<pre style="font-family:monospace;font-size:13px;padding:16px">${escHtml(payload)}</pre>`);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function setStatus(html) {
+    document.getElementById('s-status').innerHTML = html;
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatMsgType(t) {
+    return { CONNECTION_REQUEST: 'Connection Request', FOLLOW_UP_1: 'Follow-up 1', FOLLOW_UP_2: 'Follow-up 2' }[t] || t;
+  }
+
+  // ── Bootstrap ──────────────────────────────────────────────────────────────
+  // Kick off a fetch on load so bulk table shows existing accounts
+  fetchAccounts();
+</script>
+</body>
+</html>
